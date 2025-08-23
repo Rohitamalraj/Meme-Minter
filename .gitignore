@@ -1,0 +1,72 @@
+# Environment & Secrets
+.env
+*.env
+.env.local
+.env.production
+refined-veld-*.json
+*-credentials.json
+*-key.json
+
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pip/
+
+# Generated Content & Cache
+downloaded_memes/
+results/
+working/
+temp/
+*.log
+*.cache
+
+# Development & Debug Files
+test_*.js
+debug_*.js
+*_backup.js
+*_old.js
+*_test.py
+*_debug.py
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Build & Distribution
+dist/
+build/
+*.tgz
+*.tar.gz
+
+# Runtime & Process Files
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage & Testing
+coverage/
+.nyc_output/
+.coverage
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity

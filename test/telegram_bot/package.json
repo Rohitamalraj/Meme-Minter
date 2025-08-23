@@ -1,0 +1,33 @@
+{
+  "name": "viral-meme-nft-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for viral meme NFT automation on SEI blockchain",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "ethers": "^6.13.4",
+    "axios": "^1.7.7",
+    "fs-extra": "^11.2.0",
+    "path": "^0.12.7",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "nft",
+    "meme", 
+    "sei",
+    "blockchain",
+    "crypto"
+  ],
+  "author": "Viral Meme NFT Team",
+  "license": "MIT"
+}
