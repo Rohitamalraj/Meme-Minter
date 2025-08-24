@@ -1,0 +1,18 @@
+# Additional meme templates you could add to LABELS list:
+ADDITIONAL_LABELS = [
+    "Vince McMahon Reactions",
+    "Tom the Cat (Reaction)",
+    "Sad Cat Thumbs Up", 
+    "Hulk (Marvel memes)",
+    "Fork in the Road/Choice",
+    "Fake News Headlines",
+    "Fish Characters",
+    "Wrestling Memes",
+    "Cat Reaction Memes",
+    "Marvel Character Memes",
+    "Decision/Choice Memes",
+    "News Parody Memes",
+    "Custom/Original Memes"
+]
+
+# To add these to your script, edit the LABELS list in gemini_fixed.py

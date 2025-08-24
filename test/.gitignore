@@ -1,0 +1,64 @@
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+
+# Private keys and sensitive data (IMPORTANT!)
+*.key
+*_private_key*
+wallet.json
+secrets.json
+refined-veld-456716-f8-11da0cae6407.json
+
+# Node.js dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Generated files and results
+mint_and_list_results.json
+buy_nft_script.js
+*.log
+
+# Development and debug files
+debug_*.js
+test_*.js
+check_*.js
+*_backup.js
+*_old.js
+
+# Downloaded/temporary files
+downloaded_memes/
+temp/
+*.tmp
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+out/
