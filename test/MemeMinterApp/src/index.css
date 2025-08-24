@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Rajdhani', 'Orbitron', sans-serif;
+  background: #0a0a0a;
+  color: #ffffff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Dark Theme Styles */
+.primary-border {
+  border: 2px solid #3b82f6;
+  box-shadow: 
+    0 0 3px rgba(59, 130, 246, 0.3),
+    inset 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.subtle-glow {
+  box-shadow: 
+    0 0 3px rgba(59, 130, 246, 0.2),
+    0 0 6px rgba(59, 130, 246, 0.1);
+}
+
+.text-glow {
+  text-shadow: 
+    0 0 3px rgba(59, 130, 246, 0.5),
+    0 0 6px rgba(59, 130, 246, 0.3);
+}
+
+.dark-card {
+  background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+  border: 1px solid #333;
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Button Effects */
+.primary-button {
+  position: relative;
+  background: transparent;
+  border: 2px solid #3b82f6;
+  color: #3b82f6;
+  transition: all 0.3s ease;
+}
+
+.primary-button:hover {
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 
+    0 0 6px rgba(59, 130, 246, 0.4),
+    0 0 12px rgba(59, 130, 246, 0.2);
+  text-shadow: none;
+}
+
+.primary-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(59, 130, 246, 0.1),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.primary-button:hover::before {
+  left: 100%;
+}
+
+/* Gradient Backgrounds */
+.gradient-dark {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+}
+
+.gradient-primary {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(16, 185, 129, 0.1) 100%);
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 12%;
+    --ring: 217 91% 60%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 262 83% 68%;
+    --chart-3: 158 64% 52%;
+    --chart-4: 43 96% 56%;
+    --chart-5: 27 96% 61%;
+  }
+}
