@@ -19,8 +19,23 @@ const CHAIN_ID = parseInt(process.env.CHAIN_ID);
 const MAX_NFT_IMAGES = parseInt(process.env.MAX_NFT_IMAGES) || 3;
 const DEFAULT_NFT_PRICE = process.env.DEFAULT_NFT_PRICE || "0.01";
 
-// Initialize bot
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+// Initialize bot with better polling configuration
+const bot = new TelegramBot(BOT_TOKEN, { 
+  polling: {
+    interval: 1000, // Check for updates every 1 second
+    autoStart: true,
+    params: {
+      timeout: 10 // Long polling timeout
+    }
+  },
+  request: {
+    agentOptions: {
+      keepAlive: true,
+      family: 4 // Force IPv4
+    },
+    timeout: 60000 // 60 second timeout
+  }
+});
 
 // Blockchain setup
 const provider = new ethers.JsonRpcProvider(SEI_RPC);
@@ -149,6 +164,45 @@ function createNFTDetails(imagePath) {
     description: `A unique NFT representing a viral meme from internet culture. Minted via Telegram bot on SEI blockchain. Part of the exclusive Viral Memes Collection.`,
     template: imageName.replace(/[^a-zA-Z0-9]/g, ' ').trim(),
   };
+}
+
+// Helper function to get a fresh nonce for transactions
+async function getFreshNonce(walletAddress, provider) {
+  try {
+    const nonce = await provider.getTransactionCount(walletAddress, 'pending');
+    console.log(`🔢 Fresh nonce for ${walletAddress.slice(0, 10)}...: ${nonce}`);
+    return nonce;
+  } catch (error) {
+    console.error('Error getting nonce:', error);
+    throw error;
+  }
+}
+
+// Helper function to retry transactions with fresh nonce
+async function retryTransaction(transactionFunction, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 Transaction attempt ${attempt}/${maxRetries}`);
+      const result = await transactionFunction();
+      console.log(`✅ Transaction successful on attempt ${attempt}`);
+      return result;
+    } catch (error) {
+      console.error(`❌ Transaction attempt ${attempt} failed:`, error.message);
+      
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // If nonce error, wait a bit before retry
+      if (error.message.includes('nonce') || error.message.includes('sequence')) {
+        console.log(`⏱️ Waiting 5 seconds before retry due to nonce error...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      } else {
+        console.log(`⏱️ Waiting 3 seconds before retry...`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+    }
+  }
 }
 
 async function runPythonScript(scriptPath, args = []) {
@@ -411,7 +465,8 @@ bot.onText(/\/trending/, async (msg) => {
 Ready to mint this premium NFT? Use /mint ${i + 1}`;
       
       await bot.sendPhoto(chatId, filePath, {
-        caption: caption
+        caption: caption,
+        contentType: 'image/jpeg'
       });
       
       // Small delay between images to avoid flooding
@@ -502,7 +557,10 @@ bot.onText(/\/mint (.+)/, async (msg, match) => {
       );
       
       // Run the complete automation (IPFS + Blockchain + Marketplace)
-      const output = await runNodeScript('mint_single_nft.js', [file]);
+      const fullImagePath = path.join('results', 'nft_images', file);
+      console.log(`🔍 DEBUG: Sending image path to mint script:`, fullImagePath);
+      console.log(`🔍 DEBUG: File exists check from bot:`, fs.existsSync(path.join(__dirname, '..', fullImagePath)));
+      const output = await runNodeScript('mint_single_nft.js', [fullImagePath]);
       console.log('Complete automation output:', output);
       
       // Parse the result from the script output
@@ -749,6 +807,10 @@ bot.onText(/\/buy (.+)/, async (msg, match) => {
     // Wait for transaction confirmation
     const receipt = await buyTx.wait();
     
+    // Add delay to ensure blockchain state is updated
+    console.log('⏱️ Waiting for blockchain state to update...');
+    await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
+    
     // NFT goes to bot wallet first (msg.sender), so we need to transfer it to user
     console.log('🔄 NFT purchased, now transferring to user wallet...');
     
@@ -757,12 +819,19 @@ bot.onText(/\/buy (.+)/, async (msg, match) => {
       { chat_id: chatId, message_id: loadingMsg.message_id }
     );
     
-    // Transfer NFT from bot wallet to user wallet
-    const transferTx = await minterContract.connect(wallet).transferFrom(
-      wallet.address,
-      session.walletAddress,
-      tokenId
-    );
+    // Transfer NFT from bot wallet to user wallet with retry logic
+    const transferTx = await retryTransaction(async () => {
+      const currentNonce = await getFreshNonce(wallet.address, provider);
+      return await minterContract.connect(wallet).transferFrom(
+        wallet.address,
+        session.walletAddress,
+        tokenId,
+        {
+          nonce: currentNonce,
+          gasLimit: 100000 // Explicit gas limit for transfer
+        }
+      );
+    });
     
     console.log('🔄 Transfer transaction:', transferTx.hash);
     
@@ -1073,9 +1142,13 @@ bot.onText(/\/userbuy (.+)/, async (msg, match) => {
     );
     
     // Execute the purchase with user's wallet
+    // Get fresh nonce to avoid sequence errors
+    const userNonce = await getFreshNonce(userWallet.address, provider);
+    
     const buyTx = await userSaleContract.buy(listingId, {
       value: listingPrice,
-      gasLimit: 300000
+      gasLimit: 300000,
+      nonce: userNonce
     });
     
     console.log('🚀 User buy transaction sent:', buyTx.hash);
@@ -1223,17 +1296,50 @@ Ready to mint some viral meme NFTs? 🚀`;
 
 
 
-// Error handling
+// Enhanced error handling with automatic restart
 bot.on('polling_error', (error) => {
   console.error('Polling error:', error);
+  
+  // Handle specific connection errors
+  if (error.code === 'EFATAL' || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+    console.log('🔄 Connection error detected. Attempting to restart polling in 5 seconds...');
+    
+    setTimeout(() => {
+      try {
+        bot.stopPolling();
+        setTimeout(() => {
+          bot.startPolling();
+          console.log('✅ Polling restarted successfully');
+        }, 2000);
+      } catch (restartError) {
+        console.error('❌ Failed to restart polling:', restartError);
+      }
+    }, 5000);
+  }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-console.log('🤖 Viral Meme NFT Telegram Bot started!');
-console.log(`🔗 Bot wallet: ${wallet.address}`);
-console.log(`🌐 Network: SEI Testnet (Chain ID: ${CHAIN_ID})`);
-console.log(`📊 Max NFT images per trending search: ${MAX_NFT_IMAGES}`);
-console.log('🚀 Ready to serve users!');
+// Test bot connection and initialize
+async function initializeBot() {
+  try {
+    // Test the bot connection
+    const me = await bot.getMe();
+    console.log(`✅ Bot connected successfully: @${me.username}`);
+    
+    console.log('🤖 Viral Meme NFT Telegram Bot started!');
+    console.log(`🔗 Bot wallet: ${wallet.address}`);
+    console.log(`🌐 Network: SEI Testnet (Chain ID: ${CHAIN_ID})`);
+    console.log(`📊 Max NFT images per trending search: ${MAX_NFT_IMAGES}`);
+    console.log('🚀 Ready to serve users!');
+  } catch (error) {
+    console.error('❌ Failed to initialize bot:', error);
+    console.log('🔄 Retrying in 10 seconds...');
+    setTimeout(initializeBot, 10000);
+  }
+}
+
+// Start the bot
+initializeBot();
